@@ -4,7 +4,7 @@
  */
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL   = "llama3-8b-8192"; // veloce e gratuito
+const GROQ_MODEL   = "llama-3.1-8b-instant"; // veloce e gratuito
 
 const SYSTEM_PROMPT = `Sei una guida turistica AI di Melfi e del Vulture-Melfese (Basilicata, Italia). Rispondi in modo naturale e coinvolgente come una guida locale appassionata. Usa queste informazioni chiave:
 
