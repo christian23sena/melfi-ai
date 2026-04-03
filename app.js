@@ -1,4 +1,4 @@
-/**
+**
  * app.js — Chat con Groq API + streaming
  * AI Turistica: Melfi & Vulture-Melfese
  */
@@ -150,7 +150,7 @@ function init() {
   });
 }
 
-async function handleSaveKey() {
+function handleSaveKey() {
   const key = apiKeyInput.value.trim();
   if (!key.startsWith("gsk_")) {
     apiKeyError.textContent = "La chiave Groq deve iniziare con gsk_";
@@ -158,42 +158,9 @@ async function handleSaveKey() {
     return;
   }
   apiKeyError.style.display = "none";
-  apiKeySaveBtn.textContent = "Verifica in corso...";
-  apiKeySaveBtn.disabled = true;
-
-  // Test rapido della chiave
-  const ok = await testApiKey(key);
-  if (ok) {
-    saveApiKey(key);
-    showChatScreen();
-    userInput.focus();
-  } else {
-    apiKeyError.textContent = "Chiave non valida o errore di rete. Riprova.";
-    apiKeyError.style.display = "block";
-  }
-  apiKeySaveBtn.textContent = "Salva e continua";
-  apiKeySaveBtn.disabled = false;
-}
-
-async function testApiKey(key) {
-  try {
-    const res = await fetch(GROQ_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [{ role: "user", content: "ok" }],
-        max_tokens: 5,
-        stream: false,
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
+  saveApiKey(key);
+  showChatScreen();
+  userInput.focus();
 }
 
 // --- Invio messaggio ---
