@@ -1,23 +1,24 @@
 /**
- * app.js — Chat con Groq API + streaming
+ * app.js — Chat con Google Gemini API
  * AI Turistica: Melfi & Vulture-Melfese
  */
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL   = "llama-3.1-8b-instant"; // veloce e gratuito
+const GEMINI_MODEL  = "gemini-1.5-flash";
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-const SYSTEM_PROMPT = `Sei una guida turistica AI di Melfi e del Vulture-Melfese (Basilicata, Italia). Rispondi in modo naturale e coinvolgente come una guida locale appassionata. Usa queste informazioni chiave:
+const SYSTEM_PROMPT = `Sei una guida turistica AI di Melfi e del Vulture-Melfese (Basilicata, Italia). Rispondi in modo naturale e coinvolgente come una guida locale appassionata.
 
-- Melfi: città medievale normanna, prima capitale del Regno normanno d'Italia. Federico II vi promulgò le Costituzioni Melfitane (1231).
+Fatti chiave:
+- Melfi: città medievale normanna, prima capitale del Regno normanno. Federico II promulgò qui le Costituzioni Melfitane (1231).
 - Castello di Melfi (XI sec.): ospita il Museo Nazionale del Melfese con il Sarcofago di Rapolla e la Testa di Persefone.
-- Monte Vulture: vulcano spento (1326m). Laghi di Monticchio nel cratere, Abbazia di Sant'Ippolito.
+- Monte Vulture: vulcano spento (1326m), Laghi di Monticchio nel cratere, Abbazia di Sant'Ippolito.
 - Vino: Aglianico del Vulture DOC/DOCG. Cantine: Elena Fucci, Paternoster, D'Angelo, Cantine del Notaio.
 - Cucina: lagane e ceci, crapiata, pignata, peperoni cruschi, caciocavallo podolico, rafanata.
 - Borghi: Barile (arbëreshë, cantine nel tufo), Venosa (città di Orazio, Castello Aragonese), Rapolla, Rionero in Vulture.
 - Come arrivare: 30km da Potenza, 80km da Bari, 150km da Napoli.
 - Periodo migliore: aprile-giugno e settembre-ottobre.
 
-Rispondi sempre in italiano, in modo conciso e diretto.`;
+Rispondi sempre in italiano. Sii conciso, diretto e amichevole.`;
 
 // --- Stato ---
 let conversationHistory = [];
@@ -40,11 +41,11 @@ const changeKeyBtn   = document.getElementById("changeKeyBtn");
 
 // --- API Key ---
 function getApiKey() {
-  return localStorage.getItem("groq_api_key") || "";
+  return localStorage.getItem("gemini_api_key") || "";
 }
 
 function saveApiKey(key) {
-  localStorage.setItem("groq_api_key", key.trim());
+  localStorage.setItem("gemini_api_key", key.trim());
 }
 
 function showApiKeyScreen() {
@@ -59,27 +60,23 @@ function showChatScreen() {
 
 // --- Inizializzazione ---
 function init() {
-  // Controlla se la chiave è già salvata
   if (getApiKey()) {
     showChatScreen();
   } else {
     showApiKeyScreen();
   }
 
-  // Salvataggio chiave API
   apiKeySaveBtn.addEventListener("click", handleSaveKey);
   apiKeyInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleSaveKey();
   });
 
-  // Cambio chiave
   changeKeyBtn.addEventListener("click", () => {
     showApiKeyScreen();
     apiKeyInput.value = "";
     apiKeyInput.focus();
   });
 
-  // Auto-resize textarea
   userInput.addEventListener("input", () => {
     userInput.style.height = "auto";
     userInput.style.height = Math.min(userInput.scrollHeight, 160) + "px";
@@ -114,12 +111,14 @@ function init() {
       if (msg) submitUserMessage(msg);
     });
   });
+
+  userInput.focus();
 }
 
 function handleSaveKey() {
   const key = apiKeyInput.value.trim();
-  if (!key.startsWith("gsk_")) {
-    apiKeyError.textContent = "La chiave Groq deve iniziare con gsk_";
+  if (!key.startsWith("AIza")) {
+    apiKeyError.textContent = "La chiave Gemini deve iniziare con AIza";
     apiKeyError.style.display = "block";
     return;
   }
@@ -153,24 +152,31 @@ async function submitUserMessage(text) {
   let fullReply = "";
 
   try {
-    const response = await fetch(GROQ_API_URL, {
+    // Converti la cronologia nel formato Gemini
+    const contents = conversationHistory.map((msg) => ({
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: msg.content }],
+    }));
+
+    const response = await fetch(`${GEMINI_API_URL}?key=${getApiKey()}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${getApiKey()}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...conversationHistory,
-        ],
-        stream: false,
-        temperature: 0.7,
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024,
+        },
       }),
     });
 
-    if (response.status === 401) {
+    if (response.status === 400) {
+      const errData = await response.json();
+      throw new Error(errData.error?.message || "Richiesta non valida");
+    }
+
+    if (response.status === 403 || response.status === 401) {
       bubble.classList.add("error-bubble");
       bubble.textContent = "Chiave API non valida. Clicca 'Cambia chiave API' nella sidebar.";
       conversationHistory.pop();
@@ -178,23 +184,25 @@ async function submitUserMessage(text) {
     }
 
     if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errText}`);
+      const errData = await response.json();
+      throw new Error(errData.error?.message || `Errore HTTP ${response.status}`);
     }
 
     const data = await response.json();
-    fullReply = data.choices?.[0]?.message?.content || "";
+    fullReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     if (fullReply) {
       bubble.innerHTML = formatMarkdown(fullReply);
       conversationHistory.push({ role: "assistant", content: fullReply });
       scrollToBottom();
+    } else {
+      bubble.textContent = "Nessuna risposta ricevuta. Riprova.";
     }
 
   } catch (err) {
     bubble.classList.add("error-bubble");
     bubble.textContent = "Errore: " + (err.message || "Controlla la connessione e riprova.");
-    console.error("Groq error:", err);
+    console.error("Gemini error:", err);
     conversationHistory.pop();
   } finally {
     isWaiting = false;
@@ -220,7 +228,9 @@ function appendAIBubble() {
       <div class="ai-avatar">&#9968;</div>
       <span class="ai-name">Guida Melfi AI</span>
     </div>
-    <div class="bubble"></div>
+    <div class="bubble">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>
   `;
   messagesList.appendChild(container);
   scrollToBottom();
