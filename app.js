@@ -1,4 +1,4 @@
-**
+/**
  * app.js — Chat con Groq API + streaming
  * AI Turistica: Melfi & Vulture-Melfese
  */
