@@ -199,7 +199,7 @@ async function submitUserMessage(text) {
           { role: "system", content: SYSTEM_PROMPT },
           ...conversationHistory,
         ],
-        stream: true,
+        stream: false,
         temperature: 0.7,
       }),
     });
@@ -212,47 +212,23 @@ async function submitUserMessage(text) {
     }
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      const errText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errText}`);
     }
 
-    // Leggi stream SSE da Groq
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop();
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) continue;
-        const payload = trimmed.slice(5).trim();
-        if (payload === "[DONE]") break;
-
-        try {
-          const data = JSON.parse(payload);
-          const token = data.choices?.[0]?.delta?.content || "";
-          if (token) {
-            fullReply += token;
-            bubble.innerHTML = formatMarkdown(fullReply);
-            scrollToBottom();
-          }
-        } catch (_) {}
-      }
-    }
+    const data = await response.json();
+    fullReply = data.choices?.[0]?.message?.content || "";
 
     if (fullReply) {
+      bubble.innerHTML = formatMarkdown(fullReply);
       conversationHistory.push({ role: "assistant", content: fullReply });
+      scrollToBottom();
     }
 
   } catch (err) {
     bubble.classList.add("error-bubble");
-    bubble.textContent = "Errore di rete. Controlla la connessione e riprova.";
+    bubble.textContent = "Errore: " + (err.message || "Controlla la connessione e riprova.");
+    console.error("Groq error:", err);
     conversationHistory.pop();
   } finally {
     isWaiting = false;
