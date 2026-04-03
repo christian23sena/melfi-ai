@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scopri Melfi & il Vulture-Melfese</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Schermata inserimento API Key -->
+  <div class="apikey-screen" id="apiKeyScreen">
+    <div class="apikey-card">
+      <div class="apikey-icon">&#9968;</div>
+      <h2>Guida AI di Melfi</h2>
+      <p>Per usare l'app inserisci la tua chiave API Groq gratuita.<br>
+         La chiave viene salvata solo nel tuo browser.</p>
+      <div class="apikey-steps">
+        <span>1. Vai su <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a></span>
+        <span>2. Registrati gratis con Google o email</span>
+        <span>3. Clicca "Create API Key" e copia la chiave</span>
+      </div>
+      <input
+        type="password"
+        id="apiKeyInput"
+        class="apikey-input"
+        placeholder="gsk_..."
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <div class="apikey-error" id="apiKeyError"></div>
+      <button class="apikey-save-btn" id="apiKeySaveBtn">Salva e continua</button>
+    </div>
+  </div>
+
+  <!-- App principale -->
+  <div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">&#9968;</span>
+          <span class="logo-text">Melfi AI</span>
+        </div>
+      </div>
+
+      <button class="new-chat-btn" id="newChatBtn">
+        <span>&#43;</span> Nuova conversazione
+      </button>
+
+      <div class="sidebar-info">
+        <p class="sidebar-label">Suggerimenti</p>
+        <ul class="suggestions-list">
+          <li class="suggestion-item" data-msg="Cosa visitare a Melfi in un giorno?">Cosa visitare a Melfi in un giorno?</li>
+          <li class="suggestion-item" data-msg="Parlami del Castello di Melfi">Parlami del Castello di Melfi</li>
+          <li class="suggestion-item" data-msg="Quali vini sono tipici del Vulture?">Vini tipici del Vulture?</li>
+          <li class="suggestion-item" data-msg="Cosa mangiare nella cucina lucana?">Cucina lucana tipica</li>
+          <li class="suggestion-item" data-msg="Come si raggiunge Melfi?">Come si raggiunge Melfi?</li>
+          <li class="suggestion-item" data-msg="Cosa sono i Laghi di Monticchio?">Laghi di Monticchio</li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="change-key-btn" id="changeKeyBtn">&#128273; Cambia chiave API</button>
+        <div class="model-indicator">
+          <span class="dot"></span>
+          <span>Groq — llama3-8b</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Chat principale -->
+    <main class="chat-main">
+
+      <header class="chat-header">
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu">&#9776;</button>
+        <h1 class="chat-title">Guida AI — Melfi &amp; Vulture-Melfese</h1>
+        <div class="header-spacer"></div>
+      </header>
+
+      <div class="messages-area" id="messagesArea">
+
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-icon">&#9968;</div>
+          <h2>Benvenuto nella Guida AI di Melfi</h2>
+          <p>Scopri la storia normanna, i Laghi di Monticchio, l'Aglianico del Vulture e molto altro. Chiedimi qualsiasi cosa sul territorio!</p>
+          <div class="welcome-cards">
+            <div class="welcome-card" data-msg="Cosa c'è da vedere a Melfi e dintorni?">
+              <span class="card-icon">&#127956;</span>
+              <span>Cosa vedere a Melfi</span>
+            </div>
+            <div class="welcome-card" data-msg="Suggeriscimi un itinerario di 2 giorni nel Vulture-Melfese">
+              <span class="card-icon">&#128506;</span>
+              <span>Itinerario 2 giorni</span>
+            </div>
+            <div class="welcome-card" data-msg="Quali sono le specialità gastronomiche della zona?">
+              <span class="card-icon">&#127829;</span>
+              <span>Gastronomia locale</span>
+            </div>
+            <div class="welcome-card" data-msg="Parlami della storia di Melfi dai Normanni a Federico II">
+              <span class="card-icon">&#127963;</span>
+              <span>Storia di Melfi</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="messages-list" id="messagesList"></div>
+
+      </div>
+
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea
+            id="userInput"
+            class="user-input"
+            placeholder="Chiedimi qualcosa su Melfi e il Vulture-Melfese..."
+            rows="1"
+            aria-label="Messaggio"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" aria-label="Invia">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
+        <p class="input-disclaimer">Powered by Groq. Le risposte sono generate da AI — verifica sempre le informazioni pratiche prima di partire.</p>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
