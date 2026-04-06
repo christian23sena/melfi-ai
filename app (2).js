@@ -3,7 +3,7 @@
  * AI Turistica: Melfi & Vulture-Melfese
  */
 
-const GEMINI_MODEL  = "gemini-1.5-flash-latest";
+const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const SYSTEM_PROMPT = `Sei una guida turistica AI di Melfi e del Vulture-Melfese (Basilicata, Italia). Rispondi in modo naturale e coinvolgente come una guida locale appassionata.
